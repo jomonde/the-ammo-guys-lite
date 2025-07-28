@@ -1,3 +1,5 @@
+'use client';
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter } from 'next/navigation';
@@ -137,7 +139,7 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
     ...defaultOnboardingData,
     ...loadFromLocalStorage(),
   }));
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClientComponentClient();

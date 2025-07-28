@@ -68,7 +68,7 @@ export default function EmailCapture() {
         ) : (
           <div className="mt-8 p-4 bg-indigo-800 rounded-md">
             <p className="text-lg font-medium text-white">
-              Thanks for signing up! We'll keep you updated.
+              Thanks for signing up! We&apos;ll keep you updated.
             </p>
           </div>
         )}

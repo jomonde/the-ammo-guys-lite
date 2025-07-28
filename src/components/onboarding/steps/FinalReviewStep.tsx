@@ -61,7 +61,7 @@ const FinalReviewStep = () => {
         <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
           <FiCheckCircle className="h-6 w-6 text-green-600" />
         </div>
-        <h2 className="mt-3 text-2xl font-bold text-gray-900">You're All Set!</h2>
+        <h2 className="mt-3 text-2xl font-bold text-gray-900">You&apos;re All Set!</h2>
         <p className="mt-2 text-gray-600">
           Review your selections below before we create your account.
         </p>
@@ -73,7 +73,7 @@ const FinalReviewStep = () => {
             Your Ammo Stockpile Setup
           </h3>
           <p className="mt-1 max-w-2xl text-sm text-gray-500">
-            Here's a summary of your preferences.
+            Here&apos;s a summary of your preferences.
           </p>
         </div>
         

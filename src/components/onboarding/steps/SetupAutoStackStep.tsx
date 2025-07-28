@@ -24,11 +24,11 @@ const SetupAutoStackStep = () => {
   const [allocations, setAllocations] = useState<Record<string, number>>({});
   const [equalAllocation, setEqualAllocation] = useState<boolean>(true);
   
-  // Calculate allocation per caliber when budget or selection changes
+  // Set up equal allocation when toggled or when selected calibers change
   useEffect(() => {
-    if (selectedCalibers.length === 0) return;
+    if (!equalAllocation) return;
     
-    if (equalAllocation) {
+    if (selectedCalibers.length > 0) {
       const equalShare = 100 / selectedCalibers.length;
       const newAllocations: Record<string, number> = {};
       
@@ -38,7 +38,7 @@ const SetupAutoStackStep = () => {
       
       setAllocations(newAllocations);
     }
-  }, [selectedCalibers.length, equalAllocation]);
+  }, [selectedCalibers, equalAllocation, setAllocations]);
   
   // Handle allocation change
   const handleAllocationChange = (caliberId: string, value: string) => {

@@ -34,7 +34,7 @@ export default function Confirmation({ formData, onComplete }: ConfirmationProps
         Subscription Confirmed!
       </h2>
       <p className="mt-2 text-lg text-gray-600">
-        Thank you for joining The Ammo Guys family.
+        You&apos;re all set! Your subscription to The Ammo Guys is now active.
       </p>
 
       <div className="mt-10 bg-white shadow sm:rounded-lg">
@@ -89,7 +89,7 @@ export default function Confirmation({ formData, onComplete }: ConfirmationProps
                 Your first shipment is scheduled for <span className="font-medium text-gray-900">{getNextShipmentDate()}</span>.
               </p>
               <p className="mt-2 text-sm text-gray-500">
-                You'll receive a confirmation email with all the details shortly.
+                You&apos;ll receive a confirmation email shortly with all the details of your subscription. If you don&apos;t see it, please check your spam folder.
               </p>
             </div>
           </dl>
@@ -97,9 +97,9 @@ export default function Confirmation({ formData, onComplete }: ConfirmationProps
       </div>
 
       <div className="mt-10">
-        <h3 className="text-lg font-medium text-gray-900">What's next?</h3>
+        <h3 className="text-lg font-medium text-gray-900">What&apos;s next?</h3>
         <p className="mt-2 text-sm text-gray-500">
-          Get ready for your first shipment! Here's what you can do next:
+          Get ready for your first shipment! Here&apos;s what you can do next:
         </p>
         
         <ul className="mt-6 space-y-3">

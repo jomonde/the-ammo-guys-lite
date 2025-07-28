@@ -2,11 +2,34 @@
 
 import { useState, useEffect } from 'react';
 import { useOnboarding } from '@/contexts/OnboardingContext';
-import { FiArrowLeft, FiArrowRight, FiTruck, FiPackage, FiCalendar, FiCheck } from 'react-icons/fi';
+import { FiArrowLeft, FiArrowRight, FiTruck, FiPackage, FiCalendar, FiCheck, FiDollarSign } from 'react-icons/fi';
 
 type TriggerType = 'round_count' | 'value_threshold' | 'time_interval' | 'manual';
+type InputUnit = 'rounds' | 'dollars' | 'days' | 'months';
 
-const triggerOptions = [
+interface InputOption {
+  value: string;
+  label: string;
+}
+
+interface InputConfig {
+  type: 'number' | 'select';
+  min?: number;
+  step?: number;
+  unit?: InputUnit;
+  placeholder?: string;
+  options?: InputOption[];
+}
+
+interface TriggerOption {
+  id: TriggerType;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  input: InputConfig | null;
+}
+
+const triggerOptions: TriggerOption[] = [
   {
     id: 'round_count',
     title: 'Round Count',
@@ -92,9 +115,9 @@ const ShippingTriggerStep = () => {
     const option = triggerOptions.find(opt => opt.id === triggerId);
     
     // Reset input value to default for the selected trigger type
-    if (option?.input?.type === 'number') {
+    if (option?.input?.type === 'number' && option.input.placeholder) {
       setInputValue(option.input.placeholder);
-    } else if (option?.input?.type === 'select') {
+    } else if (option?.input?.type === 'select' && option.input.options?.[0]?.value) {
       setInputValue(option.input.options[0].value);
     } else {
       setInputValue('');
@@ -112,7 +135,7 @@ const ShippingTriggerStep = () => {
       shippingTrigger: {
         type: selectedTrigger,
         value: selectedOption?.input ? parseFloat(inputValue) : undefined,
-        unit: selectedOption?.input?.unit,
+        unit: selectedOption?.input?.unit === 'days' ? 'months' : selectedOption?.input?.unit,
       },
     });
     
@@ -128,12 +151,13 @@ const ShippingTriggerStep = () => {
     }
     
     if (option?.input?.type === 'select') {
-      const selectedOption = option.input.options.find(opt => opt.value === inputValue);
-      return `Ship ${selectedOption?.label.toLowerCase()}`;
+      const selectedOption = option.input.options?.find(opt => opt.value === inputValue);
+      return selectedOption ? `Ship ${selectedOption.label.toLowerCase()}` : 'Select a shipping frequency';
     }
     
-    if (option?.input?.type === 'number') {
-      return `Ship when I have ${inputValue} ${option.input.unit} in my stockpile`;
+    if (option?.input?.type === 'number' && option.input.unit) {
+      const unit = option.input.unit === 'days' ? 'months' : option.input.unit;
+      return `Ship when I have ${inputValue} ${unit} in my stockpile`;
     }
     
     return 'Select a shipping trigger';
@@ -224,7 +248,7 @@ const ShippingTriggerStep = () => {
                     onChange={(e) => setInputValue(e.target.value)}
                     className="block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
                   >
-                    {selectedOption.input.options.map((opt) => (
+                    {selectedOption.input.options?.map((opt) => (
                       <option key={opt.value} value={opt.value}>
                         {opt.label}
                       </option>
@@ -236,8 +260,8 @@ const ShippingTriggerStep = () => {
               {selectedOption.id === 'manual' && (
                 <div className="bg-blue-50 p-4 rounded-md">
                   <p className="text-sm text-blue-700">
-                    You'll need to manually request shipments when you're ready to receive your ammo.
-                    We'll notify you when it's time to restock based on your usage patterns.
+                    You&apos;ll need to manually request shipments when you&apos;re ready to receive your ammo.
+                    We&apos;ll notify you when it&apos;s time to restock based on your usage patterns.
                   </p>
                 </div>
               )}

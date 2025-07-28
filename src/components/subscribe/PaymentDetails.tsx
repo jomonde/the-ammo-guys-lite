@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { SubscriptionFormData } from '@/types/subscription';
-import { ArrowLeftIcon, ArrowRightIcon, LockClosedIcon } from '@heroicons/react/20/solid';
+import { ArrowLeftIcon, LockClosedIcon } from '@heroicons/react/20/solid';
 
 type PaymentDetailsProps = {
   formData: SubscriptionFormData;
@@ -418,7 +418,7 @@ export default function PaymentDetails({ formData, updateFormData, onSubmit, onB
                 <h3 className="text-sm font-medium text-blue-800">Secure Payment</h3>
                 <div className="mt-2 text-sm text-blue-700">
                   <p>
-                    Your payment information is encrypted and secure. We don't store your credit card details.
+                    Your payment information is encrypted and secure. We don&apos;t store your credit card details.
                   </p>
                 </div>
               </div>

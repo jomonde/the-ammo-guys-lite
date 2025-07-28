@@ -1,7 +1,7 @@
 'use client';
 
 import { useOnboarding } from '@/contexts/OnboardingContext';
-import { FiShield, FiPackage, FiClock, FiCheckCircle } from 'react-icons/fi';
+import { FiShield, FiPackage, FiClock } from 'react-icons/fi';
 
 const WelcomeStep = () => {
   const { goToNextStep } = useOnboarding();

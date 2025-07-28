@@ -14,6 +14,7 @@ type FormData = {
   ammoType: AmmoType | null;
   quantity: number;
   subscriptionTier: SubscriptionTier | null;
+  frequency: 'monthly' | 'bimonthly' | 'quarterly';
   paymentMethod: 'card' | 'ach' | null;
   cardDetails: {
     number: string;
@@ -39,6 +40,7 @@ export default function SubscribePage() {
     ammoType: null,
     quantity: 100,
     subscriptionTier: null,
+    frequency: 'monthly',
     paymentMethod: null,
     cardDetails: {
       number: '',

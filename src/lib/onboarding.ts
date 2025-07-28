@@ -1,5 +1,5 @@
 import { supabase } from './supabase/client';
-import { v4 as uuidv4 } from 'uuid';
+// uuidv4 is not currently used
 
 export interface OnboardingData {
   // User Information
@@ -100,26 +100,12 @@ export const getOnboardingStatus = async (userId: string) => {
 
 /**
  * Create a new stockpile for the user
+ * This is now handled by the database function
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const createUserStockpile = async (userId: string, data: OnboardingData) => {
-  // Create stockpile entries based on selected calibers
-  const stockpileEntries = data.calibers
-    .filter(caliber => caliber.selected)
-    .map(caliber => ({
-      user_id: userId,
-      caliber_id: caliber.id,
-      caliber_name: caliber.name,
-      quantity: 0, // Start with 0, will be updated with first shipment
-      target_quantity: 1000, // Default target, can be adjusted
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }));
-
-  const { error } = await supabase
-    .from('user_stockpile')
-    .insert(stockpileEntries);
-
-  if (error) throw error;
+  // This function is kept for reference but is not used
+  // as the functionality is now handled by the database function
   return { success: true };
 };
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useOnboarding } from '@/contexts/OnboardingContext';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { FiArrowRight, FiArrowLeft } from 'react-icons/fi';
 
 const AccountInfoStep = () => {
@@ -13,7 +13,7 @@ const AccountInfoStep = () => {
     confirmPassword: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting] = useState(false);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -76,7 +76,7 @@ const AccountInfoStep = () => {
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold mb-2">Create Your Account</h2>
         <p className="text-gray-600">
-          Let's get you set up with your new Ammo Guys account.
+          Let&apos;s get you set up with your new Ammo Guys account.
         </p>
       </div>
       

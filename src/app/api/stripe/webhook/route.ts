@@ -1,21 +1,33 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '../../../../lib/supabase/server';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-10-16',
+  apiVersion: '2025-06-30.basil',
   typescript: true,
 });
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 // Helper to get raw body for webhook verification
-async function getRawBody(readable: any) {
-  const chunks = [];
-  for await (const chunk of readable) {
-    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+async function getRawBody(readable: ReadableStream<Uint8Array> | null): Promise<Buffer> {
+  if (!readable) {
+    throw new Error('Readable stream is null');
   }
-  return Buffer.concat(chunks);
+  
+  const reader = readable.getReader();
+  const chunks: Uint8Array[] = [];
+  
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+    }
+    return Buffer.concat(chunks);
+  } finally {
+    reader.releaseLock();
+  }
 }
 
 export async function POST(request: Request) {
@@ -38,9 +50,12 @@ export async function POST(request: Request) {
   const supabase = createClient();
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const eventData = event.data as any; // Type assertion needed for Stripe webhook
+
     switch (event.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session;
+        const session = eventData.object as Stripe.Checkout.Session;
         const userId = session.metadata?.userId;
         const subscriptionId = session.subscription as string;
         const customerId = session.customer as string;
@@ -56,7 +71,9 @@ export async function POST(request: Request) {
                 stripe_customer_id: customerId,
                 status: 'active',
                 current_period_end: new Date(
-                  (session.subscription as any)?.current_period_end * 1000
+                  (typeof session.subscription === 'object' && session.subscription !== null && 'current_period_end' in session.subscription)
+                    ? (session.subscription as { current_period_end: number }).current_period_end * 1000
+                    : Date.now()
                 ).toISOString(),
                 metadata: session.metadata,
               },
@@ -68,14 +85,44 @@ export async function POST(request: Request) {
 
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
-        const customerId = subscription.customer as string;
+        const subscriptionId = (event.data.object as Stripe.Subscription).id;
 
-        // Get user ID from customer metadata or database
+        // Get the subscription with expanded customer
+        const subscriptionResponse = await stripe.subscriptions.retrieve(subscriptionId, {
+          expand: ['customer']
+        });
+        
+        // Get the subscription data with proper typing
+        const subscriptionData = subscriptionResponse as unknown as {
+          id: string;
+          status: string;
+          current_period_end: number;
+          cancel_at_period_end: boolean;
+          cancel_at: number | null;
+          metadata: Record<string, string>;
+          customer: string | Stripe.Customer;
+        };
+        
+        // Type assertion to handle the Stripe subscription response
+        const customer = subscriptionData.customer;
+        const customerId = typeof customer === 'string' ? customer : customer?.id || '';
+        
+        // Create a properly typed subscription object
+        const subscription = {
+          id: subscriptionData.id,
+          status: subscriptionData.status,
+          current_period_end: subscriptionData.current_period_end,
+          cancel_at_period_end: subscriptionData.cancel_at_period_end,
+          canceled_at: subscriptionData.cancel_at,
+          metadata: subscriptionData.metadata,
+          customer: customerId
+        };
+
+        // Get the user associated with this subscription
         const { data: user } = await supabase
           .from('profiles')
-          .select('id')
-          .eq('stripe_customer_id', customerId)
+          .select('id, email')
+          .eq('stripe_customer_id', subscription.customer)
           .single();
 
         if (user) {
@@ -117,33 +164,39 @@ export async function POST(request: Request) {
       }
 
       case 'invoice.payment_succeeded': {
-        const invoice = event.data.object as Stripe.Invoice;
-        const subscriptionId = invoice.subscription as string;
-        const customerId = invoice.customer as string;
+        const invoice = event.data.object as Stripe.Invoice & {
+          subscription: string;
+        };
+        const subscriptionId = invoice.subscription;
+        
+        // Get the subscription to update the current_period_end
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId) as unknown as {
+          id: string;
+          status: string;
+          current_period_end: number;
+          metadata: { userId?: string };
+        };
+        
+        const userId = subscription.metadata?.userId;
 
-        if (invoice.billing_reason === 'subscription_create') {
-          // Handle initial subscription creation
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-          const userId = subscription.metadata?.userId;
-
-          if (userId) {
-            await supabase
-              .from('subscriptions')
-              .update({
-                status: 'active',
-                current_period_end: new Date(
-                  subscription.current_period_end * 1000
-                ).toISOString(),
-              })
-              .eq('user_id', userId);
-          }
+        if (userId) {
+          await supabase
+            .from('subscriptions')
+            .update({
+              status: 'active',
+              current_period_end: new Date(
+                subscription.current_period_end * 1000
+              ).toISOString(),
+            })
+            .eq('user_id', userId);
         }
         break;
       }
 
       case 'invoice.payment_failed': {
-        const invoice = event.data.object as Stripe.Invoice;
-        const customerId = invoice.customer as string;
+        const invoice = event.data.object as Stripe.Invoice & {
+          subscription: string;
+        };
         const subscriptionId = invoice.subscription as string;
 
         // Update subscription status to past_due

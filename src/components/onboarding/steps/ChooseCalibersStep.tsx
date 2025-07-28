@@ -92,7 +92,7 @@ const ChooseCalibersStep = () => {
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold mb-2">What Calibers Do You Use?</h2>
         <p className="text-gray-600">
-          Select all the calibers you'd like to include in your stockpile.
+          Select all the calibers you&apos;d like to include in your stockpile.
         </p>
       </div>
 

@@ -1,9 +1,19 @@
 'use client';
 
+import { useState } from 'react';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { FiArrowLeft, FiArrowRight, FiInfo } from 'react-icons/fi';
 
-const PURPOSE_OPTIONS = [
+type PurposeId = 'self_defense' | 'range_training' | 'hunting' | 'preparedness' | 'all';
+
+interface PurposeOption {
+  id: PurposeId;
+  title: string;
+  description: string;
+  icon: string;
+}
+
+const PURPOSE_OPTIONS: PurposeOption[] = [
   {
     id: 'self_defense',
     title: 'Self Defense',
@@ -25,54 +35,63 @@ const PURPOSE_OPTIONS = [
   {
     id: 'preparedness',
     title: 'General Preparedness',
-    description: 'Stocking up for emergency situations',
-    icon: '🏕️',
+    description: 'For emergency stockpiling',
+    icon: '🛠️',
   },
   {
     id: 'all',
     title: 'All of the Above',
-    description: 'A mix of different purposes',
-    icon: '🔀',
+    description: 'A mix for all purposes',
+    icon: '🎯',
   },
 ];
 
 const SelectPurposeStep = () => {
   const { onboardingData, updateOnboardingData, goToNextStep, goToPreviousStep } = useOnboarding();
-  const [selectedPurposes, setSelectedPurposes] = useState<Set<string>>(
-    new Set(onboardingData.purposes.filter(p => p.selected).map(p => p.id))
-  );
+  
+  // Initialize selected purposes from onboarding data
+  const initialPurposes = new Set<PurposeId>();
+  (onboardingData.purposes || []).forEach(p => {
+    if (p.selected && PURPOSE_OPTIONS.some(opt => opt.id === p.id)) {
+      initialPurposes.add(p.id as PurposeId);
+    }
+  });
+  
+  const [selectedPurposes, setSelectedPurposes] = useState<Set<PurposeId>>(initialPurposes);
   const [showTooltip, setShowTooltip] = useState<string | null>(null);
 
-  const togglePurpose = (purposeId: string) => {
-    const newSelectedPurposes = new Set(selectedPurposes);
-    
-    if (purposeId === 'all') {
-      // If "All of the Above" is selected, clear other selections
-      newSelectedPurposes.clear();
-      newSelectedPurposes.add('all');
-    } else {
-      // Toggle the selected purpose
-      if (newSelectedPurposes.has(purposeId)) {
-        newSelectedPurposes.delete(purposeId);
+  const togglePurpose = (purposeId: PurposeId) => {
+    setSelectedPurposes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(purposeId)) {
+        newSet.delete(purposeId);
       } else {
-        newSelectedPurposes.add(purposeId);
-        // If selecting any specific purpose, remove "all" if it was selected
-        newSelectedPurposes.delete('all');
+        newSet.add(purposeId);
       }
-    }
-    
-    setSelectedPurposes(newSelectedPurposes);
+      // If 'all' is selected, clear other selections
+      if (purposeId === 'all') {
+        return new Set(['all'] as PurposeId[]);
+      } else {
+        newSet.delete('all');
+      }
+      return newSet;
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // If 'all' is selected, select all purposes
+    const finalPurposes = selectedPurposes.has('all')
+      ? PURPOSE_OPTIONS.map(opt => opt.id)
+      : Array.from(selectedPurposes);
+
     // Update the onboarding data with selected purposes
     updateOnboardingData({
       purposes: PURPOSE_OPTIONS.map(option => ({
-        id: option.id as any,
+        id: option.id,
         label: option.title,
-        selected: selectedPurposes.has(option.id),
+        selected: finalPurposes.includes(option.id),
       })),
     });
     
@@ -82,7 +101,7 @@ const SelectPurposeStep = () => {
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold mb-2">What's Your Primary Use for This Ammo?</h2>
+        <h2 className="text-2xl font-bold mb-2">What&apos;s Your Primary Use for This Ammo?</h2>
         <p className="text-gray-600">
           This helps us suggest optimal stockpile targets and recommendations.
         </p>
@@ -130,7 +149,7 @@ const SelectPurposeStep = () => {
                     {purpose.id === 'range_training' && 'FMJ rounds are cost-effective for practice'}
                     {purpose.id === 'hunting' && 'Consider expanding rounds for ethical hunting'}
                     {purpose.id === 'preparedness' && 'A mix of FMJ and defensive rounds recommended'}
-                    {purpose.id === 'all' && 'We\'ll help you build a versatile stockpile'}
+                    {purpose.id === 'all' && 'We&apos;ll help you build a versatile stockpile'}
                   </p>
                 </div>
               )}
